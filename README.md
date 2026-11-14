@@ -78,3 +78,29 @@ O projeto já está configurado em `config.js` para o Supabase **NOXPLAY**, na r
 **Segurança:** nunca envie sua senha a terceiros, nem coloque uma chave `service_role`/`secret` no GitHub. A chave `sb_publishable_...` do `config.js` é própria para uso no navegador.
 
 **Observação:** o banco começa vazio. Cadastre os títulos pelo ADM para que apareçam a todos os visitantes. A biblioteca pessoal e o histórico de reprodução ainda ficam armazenados no navegador do visitante.
+
+
+## V17 — Player cinematográfico próprio
+
+Para URLs de vídeo diretas (MP4 H.264/AAC, por exemplo), o NOXPLAY oferece controles próprios de reprodução, pausa, avanço/retrocesso de 10 segundos, progresso, volume, tela cheia, velocidade, brilho do vídeo, legendas Português/Português Forçado/Inglês e retomada local.
+
+**Qualidade:** no campo de URL de vídeo, pode-se cadastrar uma única URL direta ou várias versões com a sintaxe `1080p=https://servidor/video1080.mp4;720p=https://servidor/video720.mp4;480p=https://servidor/video480.mp4`. Cada qualidade precisa ser um arquivo real, com duração equivalente. Não há transcodificação automática ou qualidade adaptativa nesta versão.
+
+**YouTube:** permanece incorporado pelo player oficial do YouTube, sem os controles personalizados da V17. **Google Drive:** links comuns de compartilhamento não são fontes diretas confiáveis para o player próprio.
+
+**Idioma:** para versões com áudio diferente, cadastre os vídeos separados Dublado e Legendado; a seleção de faixas internas de um mesmo MP4 não é garantida entre navegadores. **Brilho:** filtro visual do vídeo, não altera o brilho físico do monitor. **Progresso:** salvo neste navegador, não sincronizado entre aparelhos.
+
+Mantenha `cloud.js`, `config.js`, `assets` e demais arquivos. Para atualizar a partir da V16, substitua apenas `index.html`.
+
+
+## V18 — Upload de vídeos do computador
+
+No painel ADM, selecione MP4 ou WebM no campo **Enviar vídeo do computador**, depois clique em salvar. O arquivo é enviado para o bucket público `videos` do Supabase Storage e a URL resultante é cadastrada no título. O botão também mantém a alternativa de URL externa.
+
+**Limitação real:** o plano gratuito do Supabase permite no máximo 50 MB por arquivo; vídeos grandes (como 9 GB) não são suportados nessa configuração. Não é um serviço de transcodificação nem gera várias qualidades. Uploads feitos com o método padrão não têm barra de progresso percentual; a barra indica atividade durante o envio. Os arquivos enviados ficam públicos para quem tiver a URL. A exclusão de um título do catálogo não remove automaticamente o arquivo do Storage.
+
+O bucket `videos` e as políticas foram criados no projeto Supabase associado. A permissão de envio é restrita a usuários cadastrados na tabela `admins`. Apenas envie vídeos que você tenha autorização para disponibilizar.
+
+
+## V19 — YouTube Cinema
+Vídeos do YouTube agora aparecem dentro de uma moldura cinematográfica NOXPLAY, com título e design responsivo. Os controles de reprodução, legendas, qualidade e tela cheia permanecem sendo os oficiais do YouTube. O projeto continua aceitando URLs diretas e uploads pequenos como na V18. Para instalar, substitua apenas `index.html` se já usa a V18. Não é possível ocultar completamente elementos de marca do YouTube ou substituir seu player.
