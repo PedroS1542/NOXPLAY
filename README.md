@@ -1,1 +1,1 @@
-NOXPLAY V5 — Correção do banner principal. Remove a faixa vazia à direita, mantém o degradê e adapta o fundo para telas menores. Para atualizar a interface, substitua apenas index.html no GitHub.
+NOXPLAY V4 — Correção do player do Drive no celular (iPhone/Android). Substitua apenas index.html no GitHub.
