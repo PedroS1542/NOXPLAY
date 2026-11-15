@@ -1,17 +1,20 @@
-# NOXPLAY — Drive Cinema (base V16)
+# NOXPLAY — Google Drive Cinema | Idiomas e qualidade
 
-Esta versão parte do **NOXPLAY V16** e substitui a reprodução por links do YouTube/MP4 por **Google Drive**.
+Atualização baseada no último pacote **NOXPLAY_DRIVE_CINEMA_AVISO_LEGENDAS_ADM**.
 
-- No ADM, use apenas o link do arquivo no Google Drive para o vídeo principal e os episódios.
-- Retirados da interface os uploads de vídeo pelo PC, as legendas e os campos de áudio/versões.
-- Mantidos catálogo, capas, banners, filmes/séries/animes, episódios, elenco, trailers, biblioteca e integração com Supabase.
-- O Google Drive utiliza seu **próprio player**: o NOXPLAY não controla as opções de legenda ou áudio. Essas opções **não são garantidas** e dependem do arquivo e dos recursos do Drive.
-- Compartilhe o arquivo como **Qualquer pessoa com o link → Leitor**. O link pode ser visto por terceiros.
-- O Drive pode limitar a reprodução por tráfego ou processamento; não é hospedagem de streaming dedicada.
-- Use apenas vídeos próprios ou com autorização de distribuição.
+No painel ADM, selecione áudio em Português (BR) e/ou Inglês, legendas em Português (BR) e/ou Inglês e qualidade HD 720p, Full HD 1080p, 4K 2160p ou **Outra**, digitada manualmente. Os campos são opcionais e são salvos no cadastro e exibidos nos detalhes do título. O aviso de legendas personalizado anterior foi preservado.
 
-## Publicação
-Substitua `index.html` e `cloud.js` no repositório; confira `config.js` e mantenha a pasta `assets` e demais arquivos existentes. Não é necessário alterar o banco Supabase.
+**Importante:** essas informações são declarações do administrador, não verificações automáticas. O player Google Drive não é controlado pelo NOXPLAY, e selecionar idioma ou qualidade no ADM não cria essas faixas nem garante que o Drive as ofereça.
 
-## Teste
-Cadastre um vídeo curto autorizado, com link `https://drive.google.com/file/d/ID/view`, e verifique a reprodução em janela anônima.
+## Instalação
+Substitua `index.html` no GitHub Pages. O ZIP contém os demais arquivos do site para quem preferir publicar o pacote completo. Não execute `schema.sql` novamente se o Supabase já está configurado.
+
+Verificação realizada: sintaxe dos scripts JavaScript. Ainda é necessário testar cadastro e edição no navegador publicado.
+
+## Cartões e detalhes corrigidos
+- Prévia animada ao passar o mouse sobre as capas no catálogo e em Continuar assistindo.
+- Ações: Assistir, Ver detalhes, Biblioteca, Marcar como assistido e menu de três pontos.
+- A página de detalhes mantém banner, elenco, trailer, país, duração e informações do ADM.
+- O banner da página inicial mostra títulos marcados como **Destaque** no ADM e com URL de banner válida.
+- O Google Drive não expõe o minuto exato: Continuar assistindo mostra os títulos abertos, sem inventar tempo restante.
+- Os dados do catálogo permanecem no Supabase; biblioteca e histórico de reprodução iniciada são locais ao navegador.
