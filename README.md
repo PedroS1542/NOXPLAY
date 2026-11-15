@@ -18,3 +18,9 @@ Verificação realizada: sintaxe dos scripts JavaScript. Ainda é necessário te
 - O banner da página inicial mostra títulos marcados como **Destaque** no ADM e com URL de banner válida.
 - O Google Drive não expõe o minuto exato: Continuar assistindo mostra os títulos abertos, sem inventar tempo restante.
 - Os dados do catálogo permanecem no Supabase; biblioteca e histórico de reprodução iniciada são locais ao navegador.
+
+## Tela cinematográfica V2
+- Clique no próprio cartão de prévia (inclusive na imagem ou descrição) para abrir os detalhes em tela inteira.
+- A tela mostra banner de fundo, sinopse, informações de áudio/legenda/qualidade, elenco com fotos quando cadastradas, trailer e detalhes.
+- O menu flutuante Mais opções fecha ao clicar fora, sair do cartão, abrir detalhes, selecionar ação ou pressionar Escape.
+- Os dados de filmes e as permissões de administrador continuam no Supabase.
