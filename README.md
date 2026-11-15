@@ -1,26 +1,25 @@
-# NOXPLAY — Google Drive Cinema | Idiomas e qualidade
+# NOXPLAY — Banner, Elenco e Menu V3
 
-Atualização baseada no último pacote **NOXPLAY_DRIVE_CINEMA_AVISO_LEGENDAS_ADM**.
+Base: NOXPLAY Tela Cinematográfica V2.
 
-No painel ADM, selecione áudio em Português (BR) e/ou Inglês, legendas em Português (BR) e/ou Inglês e qualidade HD 720p, Full HD 1080p, 4K 2160p ou **Outra**, digitada manualmente. Os campos são opcionais e são salvos no cadastro e exibidos nos detalhes do título. O aviso de legendas personalizado anterior foi preservado.
+- Tela de detalhes com banner grande e degradê cinematográfico.
+- Botão de três pontinhos que expande as ações lateralmente com animação.
+- Elenco e personagens em cartões com fotos quando URLs válidas foram cadastradas.
+- Botão "Elenco e detalhes" que leva diretamente à seção do elenco.
+- Caso o elenco esteja vazio, a página explica como preencher no ADM.
+- O menu fecha ao clicar fora ou pressionar Esc.
+- Mantidos Google Drive, painel ADM, Supabase, áudio, legendas, qualidade, biblioteca e catálogo.
 
-**Importante:** essas informações são declarações do administrador, não verificações automáticas. O player Google Drive não é controlado pelo NOXPLAY, e selecionar idioma ou qualidade no ADM não cria essas faixas nem garante que o Drive as ofereça.
+## Cadastro do elenco
+No painel ADM, edite o filme e preencha uma pessoa por linha:
+
+Dakota Fanning | Coraline Jones | https://exemplo.com/dakota.jpg
+Teri Hatcher | Outra Mãe | https://exemplo.com/teri.jpg
+
+Sem URL de foto, o nome e personagem aparecem com imagem substituta.
 
 ## Instalação
-Substitua `index.html` no GitHub Pages. O ZIP contém os demais arquivos do site para quem preferir publicar o pacote completo. Não execute `schema.sql` novamente se o Supabase já está configurado.
+Substitua os arquivos do site no GitHub Pages. Para mudar só a interface, substitua index.html.
 
-Verificação realizada: sintaxe dos scripts JavaScript. Ainda é necessário testar cadastro e edição no navegador publicado.
-
-## Cartões e detalhes corrigidos
-- Prévia animada ao passar o mouse sobre as capas no catálogo e em Continuar assistindo.
-- Ações: Assistir, Ver detalhes, Biblioteca, Marcar como assistido e menu de três pontos.
-- A página de detalhes mantém banner, elenco, trailer, país, duração e informações do ADM.
-- O banner da página inicial mostra títulos marcados como **Destaque** no ADM e com URL de banner válida.
-- O Google Drive não expõe o minuto exato: Continuar assistindo mostra os títulos abertos, sem inventar tempo restante.
-- Os dados do catálogo permanecem no Supabase; biblioteca e histórico de reprodução iniciada são locais ao navegador.
-
-## Tela cinematográfica V2
-- Clique no próprio cartão de prévia (inclusive na imagem ou descrição) para abrir os detalhes em tela inteira.
-- A tela mostra banner de fundo, sinopse, informações de áudio/legenda/qualidade, elenco com fotos quando cadastradas, trailer e detalhes.
-- O menu flutuante Mais opções fecha ao clicar fora, sair do cartão, abrir detalhes, selecionar ação ou pressionar Escape.
-- Os dados de filmes e as permissões de administrador continuam no Supabase.
+## Limites de teste
+Sintaxe JS e integridade ZIP verificadas; não houve teste integrado com o Supabase ou navegador do usuário.
