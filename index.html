@@ -412,7 +412,7 @@ function recordProgress(id,time,duration){if(!id||!Number.isFinite(time))return;
 function renderContinue(){const sec=$('continueSection'),grid=$('continueGrid');if(!sec)return;let arr=items.filter(i=>progress[i.id]?.time>0&&!['assistidos'].includes(library[i.id])).sort((a,b)=>progress[b.id].updated-progress[a.id].updated);sec.style.display=page==='inicio'&&arr.length?'':'none';grid.innerHTML=arr.map(i=>{let p=progress[i.id],pct=p.duration?Math.min(100,100*p.time/p.duration):0;return `<button class="poster" oncontextmenu="openPosterMenu(event,'${i.id}')" onclick="showDetail('${i.id}',true)"><div class="posterImg">${library[i.id]==='assistidos'?'<span class="watchedMark" title="Assistido">✓</span>':''}${cover(i)?`<img src="${esc(cover(i))}" alt="" loading="lazy">`:''}</div><div class="posterTitle">${esc(i.title)}</div><div class="progressBar"><span style="width:${pct}%"></span></div><div class="posterMeta">${p.duration?`${fmt(p.duration-p.time)} restantes`:`Retomar em ${fmt(p.time)}`}</div></button>`}).join('')}
 function initYouTubeAPI(){if(window.YT?.Player)return;const sc=document.createElement('script');sc.src='https://www.youtube.com/iframe_api';document.head.appendChild(sc)}
 function trackYouTube(id,videoId){clearInterval(ytInterval);if(!window.YT?.Player){setTimeout(()=>trackYouTube(id,videoId),350);return}if(!$('ytPlayer'))return;ytPlayer=new YT.Player('ytPlayer',{videoId,playerVars:{autoplay:1,cc_load_policy:1,cc_lang_pref:'pt',origin:location.protocol.startsWith('http')?location.origin:undefined},events:{onReady:e=>{let pos=progress[id]?.time||0;if(pos>0)e.target.seekTo(pos,true);ytInterval=setInterval(()=>{try{recordProgress(id,e.target.getCurrentTime(),e.target.getDuration())}catch{}},1500)}}})}
-function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function ytId(url){try{let u=new URL(url);if(u.hostname==='youtu.be')return u.pathname.slice(1).split('/')[0];if(u.hostname.endsWith('youtube.com')||u.hostname.endsWith('youtube-nocookie.com'))return u.searchParams.get('v')||u.pathname.match(/\/(?:embed|shorts|live)\/([^/]+)/)?.[1]}catch{}return null}function cover(i){return i.cover||(ytId(i.video)?`https://img.youtube.com/vi/${ytId(i.video)}/hqdefault.jpg`:'')}function featured(){return items.filter(i=>i.featured)}function renderHero(){const arr=featured(),i=arr.length?arr[heroIndex%arr.length]:null;$('heroTitle').textContent=i?i.title:'Seu cinema, seu universo.';$('heroDesc').textContent=i?(i.description||'Descubra esta história no NOXPLAY.'):'Descubra histórias, explore categorias e encontre o que assistir. Seu catálogo com uma experiência cinematográfica.';$('heroArt').style.backgroundImage=i?`url("${(i.banner||cover(i)).replace(/"/g,'%22')}")`:'';$('heroWatch').textContent=i?'▶ Assistir agora':'▶ Explorar catálogo';$('heroMore').style.display=i?'':'none';$('dots').innerHTML=arr.map((_,n)=>`<button aria-label="Destaque ${n+1}" class="${n===heroIndex%arr.length?'on':''}" onclick="heroIndex=${n};renderHero()"></button>`).join('')}function heroAction(){const arr=featured();if(arr.length)showDetail(arr[heroIndex%arr.length].id,true);else $('catalog').scrollIntoView({behavior:'smooth'})}function heroInfo(){const arr=featured();if(arr.length)showDetail(arr[heroIndex%arr.length].id)}function render(){const genres=['Todos',...ALL_GENRES,...new Set(items.map(i=>i.genre).filter(g=>g&&!ALL_GENRES.includes(g)))];$('filters').innerHTML=genres.map(g=>`<button class="chip ${genre===g?'on':''}" onclick="genre=${JSON.stringify(g).replace(/"/g,'&quot;')};render()">${esc(g)}</button>`).join('');let q=$('search').value.toLocaleLowerCase('pt-BR');let filtered=items.filter(i=>(page!=='biblioteca'||(library[i.id]&&true))&&(kind==='Todos'||i.type===kind||(kind==='Anime'&&i.genre==='Anime'))&&(genre==='Todos'||i.genre===genre)&&[i.title,i.description,i.genre].join(' ').toLocaleLowerCase('pt-BR').includes(q));$('count').textContent=`${filtered.length} título(s)`;$('listTitle').textContent=page==='filmes'?'Todos os filmes':page==='series'?'Todas as séries':page==='animes'?'Todos os animes':page==='animes'?'Animes':page==='categorias'?'Explore por categoria':'Filmes e séries';$('catalog').innerHTML=filtered.length?filtered.map(i=>`<button class="poster" oncontextmenu="openPosterMenu(event,'${i.id}')" onclick="showDetail('${i.id}')"><div class="posterImg">${library[i.id]==='assistidos'?'<span class="watchedMark" title="Assistido">✓</span>':''}${cover(i)?`<img src="${esc(cover(i))}" alt="Capa de ${esc(i.title)}" loading="lazy" onerror="this.style.display='none'">`:'<span class="empty">▶</span>'}</div><div class="posterTitle">${esc(i.title)}</div><div class="posterMeta">${esc(i.year||'')} ${i.year?'•':''} ${esc(i.type)} • ${esc(i.genre)}</div></button>`).join(''):'<div class="emptyState">Nenhum título encontrado. Você pode cadastrar seus primeiros filmes no painel ADM.</div>';renderHero();renderContinue();renderAdminList()}function navigate(next){page=next;kind=next==='filmes'?'Filme':next==='series'?'Série':next==='animes'?'Anime':'Todos';genre='Todos';location.hash=next;updatePage();window.scrollTo({top:0,behavior:'smooth'})}function updatePage(){const names={inicio:'Explore o catálogo',filmes:'Filmes',series:'Séries',animes:'Animes',categorias:'Categorias',biblioteca:'Minha biblioteca'};document.querySelectorAll('nav button').forEach((b,n)=>b.classList.toggle('active',['inicio','filmes','series','animes','categorias','biblioteca'][n]===page));$('pageHeading').textContent=names[page];$('hero').style.display=page==='inicio'?'':'none';$('filters').style.display=page==='categorias'?'flex':'none';render()}function setKind(k,b){navigate(k==='Filme'?'filmes':k==='Série'?'series':'inicio')}function show(id){$(id).classList.add('show')}function hide(id){$(id).classList.remove('show')}function openAdmin(){renderAdminList();show('adminModal')}function toggleSeries(){$('seriesFields').style.display=['Série','Anime'].includes($('fType').value)?'':'none'}function suggestImage(){/* Capa automática aplicada ao exibir, sem substituir a imagem manual */}function resetForm(){editId=null;$('contentForm').reset();$('formTitle').textContent='Adicionar filme ou série';toggleSeries()}function saveContent(e){e.preventDefault();const data={id:editId||crypto.randomUUID(),title:$('fTitle').value.trim(),type:$('fType').value,year:$('fYear').value.trim(),genre:$('fGenre').value,description:$('fDesc').value.trim(),video:$('fVideo').value.trim(),cover:$('fCover').value.trim(),banner:$('fBanner').value.trim(),forced:$('fForced').value.trim(),full:$('fFull').value.trim(),featured:$('fFeatured').checked,episodes:$('fEpisodes').value.split('\n').map(s=>s.trim()).filter(Boolean).map(s=>{let p=s.split('|');return {title:(p[0]||'Episódio').trim(),url:(p.slice(1).join('|')||'').trim()}})};if(editId)items=items.map(i=>i.id===editId?data:i);else items.unshift(data);try{localStorage.setItem(KEY,JSON.stringify(items))}catch{toast('Não foi possível salvar no navegador.')}resetForm();render();toast('Título salvo no catálogo!')}function renderAdminList(){if(!$('adminList'))return;$('adminList').innerHTML=items.length?items.map(i=>`<div class="adminItem"><span>${esc(i.title)} <small style="color:#aaa">(${esc(i.type)})</small></span><div style="display:flex;gap:5px"><button onclick="editContent('${i.id}')">Editar</button><button onclick="deleteContent('${i.id}')">Excluir</button></div></div>`).join(''):'<p class="hint">Nenhum título cadastrado ainda.</p>'}function editContent(id){const i=items.find(x=>x.id===id);if(!i)return;editId=id;$('formTitle').textContent='Editar conteúdo';for(const [f,k] of [['fTitle','title'],['fType','type'],['fYear','year'],['fGenre','genre'],['fDesc','description'],['fVideo','video'],['fCover','cover'],['fBanner','banner'],['fForced','forced'],['fFull','full']])$(f).value=i[k]||'';$('fFeatured').checked=!!i.featured;$('fEpisodes').value=(i.episodes||[]).map(e=>`${e.title} | ${e.url}`).join('\n');toggleSeries();$('contentForm').scrollIntoView({behavior:'smooth'})}function deleteContent(id){if(!confirm('Excluir este título?'))return;items=items.filter(i=>i.id!==id);localStorage.setItem(KEY,JSON.stringify(items));heroIndex=0;render()}function showDetail(id,play=false){const i=items.find(x=>x.id===id);if(!i)return;current=i;episodeIndex=0;$('detailTitle').textContent=i.title;const img=cover(i);$('detailBody').innerHTML=`<div class="detail">${img?`<img src="${esc(img)}" alt="Capa">`:''}<div><p style="color:#bbb">${esc(i.year)} • ${esc(i.type)} • ${esc(i.genre)}</p><p style="line-height:1.7">${esc(i.description||'Sem sinopse cadastrada.')}</p><button class="primary" onclick="playCurrent()">▶ Assistir / Continuar</button> <button class="secondary" onclick="toggleLibrary('${i.id}')">${library[i.id]==='quero'?'✓ Na biblioteca':'＋ Adicionar à biblioteca'}</button></div></div><div id="playerArea" style="margin-top:20px"></div><div id="episodesArea"></div>`;renderEpisodes();show('detailModal');if(play)playCurrent()}function renderEpisodes(){const area=$('episodesArea');if(!area||!current)return;area.innerHTML=['Série','Anime'].includes(current.type)&&current.episodes?.length?'<h3>Episódios</h3>'+current.episodes.map((e,n)=>`<div class="episode"><span>${esc(e.title)}</span><button onclick="episodeIndex=${n};playCurrent()">▶ Assistir</button></div>`).join(''):''}function playCurrent(){if(!current)return;clearInterval(ytInterval);let url=['Série','Anime'].includes(current.type)&&current.episodes?.length?current.episodes[episodeIndex]?.url:current.video;let area=$('playerArea');if(!url){area.innerHTML='<p class="hint">Este título ainda não tem um link de vídeo cadastrado.</p>';return}let id=ytId(url);if(id){area.innerHTML=`<div class="player" id="ytPlayer"></div><p class="hint">Use CC no YouTube para legendas. O progresso pode variar conforme o navegador.</p>`;initYouTubeAPI();trackYouTube(current.id,id)}else if(/^https?:\/\//i.test(url)){area.innerHTML='<video class="player" id="localPlayer" controls autoplay playsinline></video><p class="hint">Se as legendas não aparecerem, use o menu de legendas do player. Links de vídeo e .vtt devem permitir acesso pelo navegador (CORS).</p>';const v=$('localPlayer');v.src=url;
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function ytId(url){try{let u=new URL(url);if(u.hostname==='youtu.be')return u.pathname.slice(1).split('/')[0];if(u.hostname.endsWith('youtube.com')||u.hostname.endsWith('youtube-nocookie.com'))return u.searchParams.get('v')||u.pathname.match(/\/(?:embed|shorts|live)\/([^/]+)/)?.[1]}catch{}return null}function cover(i){return i.cover||(ytId(i.video)?`https://img.youtube.com/vi/${ytId(i.video)}/hqdefault.jpg`:'')}function featured(){const group=page==='filmes'?'Filme':page==='series'?'Série':null;const available=group?items.filter(i=>i.type===group):items;const picks=available.filter(i=>i.featured);return picks.length?picks:(group?available.slice(0,5):picks)}function renderHero(){const arr=featured(),i=arr.length?arr[heroIndex%arr.length]:null;$('heroTitle').textContent=i?i.title:'Seu cinema, seu universo.';$('heroDesc').textContent=i?(i.description||'Descubra esta história no NOXPLAY.'):'Descubra histórias, explore categorias e encontre o que assistir. Seu catálogo com uma experiência cinematográfica.';$('heroArt').style.backgroundImage=i?`url("${(i.banner||cover(i)).replace(/"/g,'%22')}")`:'';$('heroWatch').textContent=i?'▶ Assistir agora':'▶ Explorar catálogo';$('heroMore').style.display=i?'':'none';$('dots').innerHTML=arr.map((_,n)=>`<button aria-label="Destaque ${n+1}" class="${n===heroIndex%arr.length?'on':''}" onclick="heroIndex=${n};renderHero()"></button>`).join('')}function heroAction(){const arr=featured();if(arr.length)showDetail(arr[heroIndex%arr.length].id,true);else $('catalog').scrollIntoView({behavior:'smooth'})}function heroInfo(){const arr=featured();if(arr.length)showDetail(arr[heroIndex%arr.length].id)}function render(){const genres=['Todos',...ALL_GENRES,...new Set(items.map(i=>i.genre).filter(g=>g&&!ALL_GENRES.includes(g)))];$('filters').innerHTML=genres.map(g=>`<button class="chip ${genre===g?'on':''}" onclick="genre=${JSON.stringify(g).replace(/"/g,'&quot;')};render()">${esc(g)}</button>`).join('');let q=$('search').value.toLocaleLowerCase('pt-BR');let filtered=items.filter(i=>(page!=='biblioteca'||(library[i.id]&&true))&&(kind==='Todos'||i.type===kind||(kind==='Anime'&&i.genre==='Anime'))&&(genre==='Todos'||i.genre===genre)&&[i.title,i.description,i.genre].join(' ').toLocaleLowerCase('pt-BR').includes(q));$('count').textContent=`${filtered.length} título(s)`;$('listTitle').textContent=page==='filmes'?'Todos os filmes':page==='series'?'Todas as séries':page==='animes'?'Todos os animes':page==='animes'?'Animes':page==='categorias'?'Explore por categoria':'Filmes e séries';$('catalog').innerHTML=filtered.length?filtered.map(i=>`<button class="poster" oncontextmenu="openPosterMenu(event,'${i.id}')" onclick="showDetail('${i.id}')"><div class="posterImg">${library[i.id]==='assistidos'?'<span class="watchedMark" title="Assistido">✓</span>':''}${cover(i)?`<img src="${esc(cover(i))}" alt="Capa de ${esc(i.title)}" loading="lazy" onerror="this.style.display='none'">`:'<span class="empty">▶</span>'}</div><div class="posterTitle">${esc(i.title)}</div><div class="posterMeta">${esc(i.year||'')} ${i.year?'•':''} ${esc(i.type)} • ${esc(i.genre)}</div></button>`).join(''):'<div class="emptyState">Nenhum título encontrado. Você pode cadastrar seus primeiros filmes no painel ADM.</div>';renderHero();renderContinue();renderAdminList()}function navigate(next){page=next;kind=next==='filmes'?'Filme':next==='series'?'Série':next==='animes'?'Anime':'Todos';genre='Todos';location.hash=next;updatePage();window.scrollTo({top:0,behavior:'smooth'})}function updatePage(){const names={inicio:'Explore o catálogo',filmes:'Filmes',series:'Séries',animes:'Animes',categorias:'Categorias',biblioteca:'Minha biblioteca'};document.querySelectorAll('nav button').forEach((b,n)=>b.classList.toggle('active',['inicio','filmes','series','animes','categorias','biblioteca'][n]===page));$('pageHeading').textContent=names[page];$('hero').style.display=['inicio','filmes','series'].includes(page)?'':'none';$('filters').style.display=page==='categorias'?'flex':'none';render()}function setKind(k,b){navigate(k==='Filme'?'filmes':k==='Série'?'series':'inicio')}function show(id){$(id).classList.add('show')}function hide(id){$(id).classList.remove('show')}function openAdmin(){renderAdminList();show('adminModal')}function toggleSeries(){$('seriesFields').style.display=['Série','Anime'].includes($('fType').value)?'':'none'}function suggestImage(){/* Capa automática aplicada ao exibir, sem substituir a imagem manual */}function resetForm(){editId=null;$('contentForm').reset();$('formTitle').textContent='Adicionar filme ou série';toggleSeries()}function saveContent(e){e.preventDefault();const data={id:editId||crypto.randomUUID(),title:$('fTitle').value.trim(),type:$('fType').value,year:$('fYear').value.trim(),genre:$('fGenre').value,description:$('fDesc').value.trim(),video:$('fVideo').value.trim(),cover:$('fCover').value.trim(),banner:$('fBanner').value.trim(),forced:$('fForced').value.trim(),full:$('fFull').value.trim(),featured:$('fFeatured').checked,episodes:$('fEpisodes').value.split('\n').map(s=>s.trim()).filter(Boolean).map(s=>{let p=s.split('|');return {title:(p[0]||'Episódio').trim(),url:(p.slice(1).join('|')||'').trim()}})};if(editId)items=items.map(i=>i.id===editId?data:i);else items.unshift(data);try{localStorage.setItem(KEY,JSON.stringify(items))}catch{toast('Não foi possível salvar no navegador.')}resetForm();render();toast('Título salvo no catálogo!')}function renderAdminList(){if(!$('adminList'))return;$('adminList').innerHTML=items.length?items.map(i=>`<div class="adminItem"><span>${esc(i.title)} <small style="color:#aaa">(${esc(i.type)})</small></span><div style="display:flex;gap:5px"><button onclick="editContent('${i.id}')">Editar</button><button onclick="deleteContent('${i.id}')">Excluir</button></div></div>`).join(''):'<p class="hint">Nenhum título cadastrado ainda.</p>'}function editContent(id){const i=items.find(x=>x.id===id);if(!i)return;editId=id;$('formTitle').textContent='Editar conteúdo';for(const [f,k] of [['fTitle','title'],['fType','type'],['fYear','year'],['fGenre','genre'],['fDesc','description'],['fVideo','video'],['fCover','cover'],['fBanner','banner'],['fForced','forced'],['fFull','full']])$(f).value=i[k]||'';$('fFeatured').checked=!!i.featured;$('fEpisodes').value=(i.episodes||[]).map(e=>`${e.title} | ${e.url}`).join('\n');toggleSeries();$('contentForm').scrollIntoView({behavior:'smooth'})}function deleteContent(id){if(!confirm('Excluir este título?'))return;items=items.filter(i=>i.id!==id);localStorage.setItem(KEY,JSON.stringify(items));heroIndex=0;render()}function showDetail(id,play=false){const i=items.find(x=>x.id===id);if(!i)return;current=i;episodeIndex=0;$('detailTitle').textContent=i.title;const img=cover(i);$('detailBody').innerHTML=`<div class="detail">${img?`<img src="${esc(img)}" alt="Capa">`:''}<div><p style="color:#bbb">${esc(i.year)} • ${esc(i.type)} • ${esc(i.genre)}</p><p style="line-height:1.7">${esc(i.description||'Sem sinopse cadastrada.')}</p><button class="primary" onclick="playCurrent()">▶ Assistir / Continuar</button> <button class="secondary" onclick="toggleLibrary('${i.id}')">${library[i.id]==='quero'?'✓ Na biblioteca':'＋ Adicionar à biblioteca'}</button></div></div><div id="playerArea" style="margin-top:20px"></div><div id="episodesArea"></div>`;renderEpisodes();show('detailModal');if(play)playCurrent()}function renderEpisodes(){const area=$('episodesArea');if(!area||!current)return;area.innerHTML=['Série','Anime'].includes(current.type)&&current.episodes?.length?'<h3>Episódios</h3>'+current.episodes.map((e,n)=>`<div class="episode"><span>${esc(e.title)}</span><button onclick="episodeIndex=${n};playCurrent()">▶ Assistir</button></div>`).join(''):''}function playCurrent(){if(!current)return;clearInterval(ytInterval);let url=['Série','Anime'].includes(current.type)&&current.episodes?.length?current.episodes[episodeIndex]?.url:current.video;let area=$('playerArea');if(!url){area.innerHTML='<p class="hint">Este título ainda não tem um link de vídeo cadastrado.</p>';return}let id=ytId(url);if(id){area.innerHTML=`<div class="player" id="ytPlayer"></div><p class="hint">Use CC no YouTube para legendas. O progresso pode variar conforme o navegador.</p>`;initYouTubeAPI();trackYouTube(current.id,id)}else if(/^https?:\/\//i.test(url)){area.innerHTML='<video class="player" id="localPlayer" controls autoplay playsinline></video><p class="hint">Se as legendas não aparecerem, use o menu de legendas do player. Links de vídeo e .vtt devem permitir acesso pelo navegador (CORS).</p>';const v=$('localPlayer');v.src=url;
 const audioUI=document.createElement('div');audioUI.className='v11hint';audioUI.style.marginTop='10px';v.insertAdjacentElement('afterend',audioUI);
 function refreshAudio(){const tracks=v.audioTracks;if(!tracks||!tracks.length){audioUI.textContent='Seleção de áudio indisponível neste navegador ou formato. Se necessário, cadastre URLs separadas para dublado e legendado.';return}audioUI.innerHTML='<label for="audioTrackChoice">Idioma do áudio</label><select id="audioTrackChoice"></select>';const sel=audioUI.querySelector('select');Array.from(tracks).forEach((t,n)=>{const opt=document.createElement('option');opt.value=n;opt.textContent=(t.label||t.language||'Faixa '+(n+1));opt.selected=t.enabled;sel.appendChild(opt)});sel.onchange=()=>Array.from(tracks).forEach((t,n)=>t.enabled=n===Number(sel.value))}
 v.addEventListener('loadedmetadata',refreshAudio);
@@ -1517,13 +1517,13 @@ render29();
    const heading=document.getElementById('pageHeading');
    if(home && heading)heading.textContent='Explore o catálogo';
    const hero=document.getElementById('hero');
-   if(hero)hero.style.display=home?'':'none';
+   if(hero)hero.style.display=['inicio','filmes','series'].includes(page)?'':'none';
  }
- window.updatePage=function(){oldUpdate.apply(this,arguments);sync()};
+ window.updatePage=function(){oldUpdate.apply(this,arguments);sync();if(typeof window.renderHero==='function')window.renderHero()};
  const oldNavigate=window.navigate;
  window.navigate=function(next){
    if(next==='inicio'){
-     page='inicio';kind='Todos';genre='Todos';
+     page='inicio';kind='Todos';genre='Todos';heroIndex=0;
      const search=document.getElementById('search');
      if(search)search.value='';
      location.hash='inicio';
@@ -1531,9 +1531,131 @@ render29();
      window.scrollTo({top:0,behavior:'smooth'});
      return;
    }
-   return oldNavigate.apply(this,arguments);
+   heroIndex=0;return oldNavigate.apply(this,arguments);
  };
  window.addEventListener('hashchange',()=>{if(location.hash==='#inicio'){page='inicio';window.updatePage()}});
  sync();
 })();
-</script></body></html>
+</script>
+<style id="nox33-cinematic-style">
+#hero.nox33-hero{width:100%;min-height:min(76vh,760px);padding:clamp(28px,6vw,90px);isolation:isolate;background:#090a0e;overflow:hidden}
+#hero.nox33-hero .heroArt{inset:0;width:100%;height:100%;right:auto;opacity:1;mask-image:none;background-position:center;background-size:cover;z-index:-3;transition:opacity .7s}
+#hero.nox33-hero:after{z-index:-1;background:linear-gradient(90deg,rgba(4,5,9,.88) 0%,rgba(4,5,9,.55) 39%,transparent 83%),linear-gradient(0deg,rgba(4,5,9,.55),transparent 40%);transition:opacity .7s}
+#hero.nox33-hero.nox33-playing:after{opacity:.2}
+#hero.nox33-hero .heroBody{max-width:min(570px,80vw);z-index:4;text-shadow:0 2px 14px #0009}
+#hero.nox33-hero .nox33-logo{display:block;max-width:min(410px,85%);max-height:175px;object-fit:contain;object-position:left center;margin-bottom:15px;filter:drop-shadow(0 3px 9px #0008)}
+#hero.nox33-hero .nox33-meta{display:flex;flex-wrap:wrap;gap:9px;align-items:center;color:#eee;font-size:14px;font-weight:650;margin:14px 0}
+#hero.nox33-hero .nox33-meta span{padding:3px 0}
+#hero.nox33-hero .nox33-meta .nox33-rating{border:1px solid #eee9;padding:3px 6px;border-radius:5px}
+#hero.nox33-hero .nox33-video{position:absolute;inset:0;z-index:-2;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .8s}
+#hero.nox33-hero.nox33-playing .nox33-video{opacity:1}
+#hero.nox33-hero .nox33-video iframe{position:absolute;top:50%;left:50%;width:max(100%,177.78vh);height:max(100%,56.25vw);transform:translate(-50%,-50%);border:0}
+#hero.nox33-hero .nox33-video video{width:100%;height:100%;object-fit:cover}
+#hero.nox33-hero .nox33-controls{position:absolute;bottom:14px;left:5%;right:5%;z-index:6;display:flex;align-items:center;gap:10px;color:#fff;font-size:12px}
+#hero.nox33-hero .nox33-track{height:4px;background:#ffffff55;border-radius:8px;flex:1;overflow:hidden}
+#hero.nox33-hero .nox33-fill{width:0%;height:100%;background:#ed3148;transition:width .3s linear}
+#hero.nox33-hero .nox33-sound{border:1px solid #ffffff7c;border-radius:50%;background:#0008;color:white;width:36px;height:36px;cursor:pointer}
+#hero.nox33-hero .dots{margin-bottom:20px}
+@media(max-width:650px){#hero.nox33-hero{min-height:580px;padding:36px 20px}#hero.nox33-hero .heroBody{max-width:100%}#hero.nox33-hero .nox33-logo{max-height:105px}}
+</style>
+<script id="nox33-cinematic-hero">
+(function(){
+'use strict';
+const hero=document.getElementById('hero'),body=hero?.querySelector('.heroBody');
+if(!hero||!body)return;
+hero.classList.add('nox33-hero');
+const meta=document.createElement('div');meta.className='nox33-meta';
+const logo=document.createElement('img');logo.className='nox33-logo';logo.alt='Logo oficial';
+const media=document.createElement('div');media.className='nox33-video';
+const controls=document.createElement('div');controls.className='nox33-controls';
+controls.innerHTML='<span class="nox33-time">0:00 / 0:00</span><div class="nox33-track"><div class="nox33-fill"></div></div>';
+const sound=document.createElement('button');sound.className='nox33-sound';sound.type='button';sound.textContent='🔊';sound.title='Ativar ou silenciar som';
+controls.append(sound);hero.append(media,controls);
+body.insertBefore(logo,body.querySelector('#heroTitle'));
+body.insertBefore(meta,body.querySelector('#heroDesc'));
+const title=body.querySelector('#heroTitle'),time=controls.querySelector('.nox33-time'),fill=controls.querySelector('.nox33-fill');
+let player=null,activeId=null,watch=null,elapsed=0,total=0,muted=false,ytOrigin='https://www.youtube.com';
+const fmt=t=>{t=Math.max(0,Math.floor(Number(t)||0));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
+const update=()=>{time.textContent=fmt(elapsed)+' / '+fmt(total);fill.style.width=(total?Math.min(100,elapsed/total*100):0)+'%'};
+const youtubeId=url=>{try{const u=new URL(url);if(u.hostname==='youtu.be')return u.pathname.split('/')[1];if(u.hostname.includes('youtube.com')||u.hostname.includes('youtube-nocookie.com'))return u.searchParams.get('v')||u.pathname.match(/\/(?:embed|shorts|live)\/([^/?]+)/)?.[1]}catch{}return null};
+const safe=url=>{try{const u=new URL(url);return ['https:','http:'].includes(u.protocol)?u.href:''}catch{return ''}};
+function stop(){clearInterval(watch);watch=null;media.replaceChildren();player=null;hero.classList.remove('nox33-playing');elapsed=0;total=0;update()}
+function send(func,args=[]){if(player?.tagName==='IFRAME')player.contentWindow?.postMessage(JSON.stringify({event:'command',func,args}),ytOrigin)}
+function start(i){
+ const trailer=safe(i.trailer||i.trailerUrl||i.youtubeTrailer||'');
+ if(!trailer)return;
+ const id=youtubeId(trailer);
+ if(id){
+   const frame=document.createElement('iframe');
+   frame.title='Trailer de '+i.title;frame.allow='autoplay; encrypted-media; picture-in-picture';
+   frame.src='https://www.youtube.com/embed/'+encodeURIComponent(id)+'?enablejsapi=1&autoplay=1&controls=0&playsinline=1&rel=0&origin='+encodeURIComponent(location.origin);
+   media.append(frame);player=frame;ytOrigin='https://www.youtube.com';
+   frame.addEventListener('load',()=>{send('playVideo');send('unMute');setTimeout(()=>{send('playVideo')},350)});
+   // Browser autoplay restrictions can require user interaction to enable audio.
+   watch=setInterval(()=>{send('getCurrentTime');send('getDuration');send('getPlayerState')},850);
+   hero.classList.add('nox33-playing');
+ }else if(/\.(mp4|webm|ogg)(?:[?#]|$)/i.test(trailer)){
+   const video=document.createElement('video');video.src=trailer;video.autoplay=true;video.playsInline=true;video.preload='metadata';video.muted=false;
+   video.addEventListener('timeupdate',()=>{elapsed=video.currentTime;total=video.duration;update()});
+   video.addEventListener('ended',stop);
+   media.append(video);player=video;
+   video.play().then(()=>hero.classList.add('nox33-playing')).catch(()=>{video.muted=true;muted=true;sound.textContent='🔇';video.play().then(()=>hero.classList.add('nox33-playing')).catch(()=>{})});
+ }
+}
+window.addEventListener('message',e=>{
+ if(e.origin!=='https://www.youtube.com'&&e.origin!=='https://www.youtube-nocookie.com')return;
+ if(!player||player.tagName!=='IFRAME'||e.source!==player.contentWindow)return;
+ try{const m=typeof e.data==='string'?JSON.parse(e.data):e.data;
+ const info=m.info||{};
+ if(typeof info.currentTime==='number')elapsed=info.currentTime;
+ if(typeof info.duration==='number')total=info.duration;
+ if(typeof info.playerState==='number'&&info.playerState===0){stop();return}
+ if(m.event==='onStateChange'&&m.info===0){stop();return}
+ update()}catch{}
+});
+sound.addEventListener('click',()=>{muted=!muted;sound.textContent=muted?'🔇':'🔊';if(player?.tagName==='VIDEO')player.muted=muted;else send(muted?'mute':'unMute')});
+const oldRender=window.renderHero;
+window.renderHero=function(){
+ oldRender.apply(this,arguments);
+ const arr=typeof featured==='function'?featured():[];
+ const i=arr.length?arr[heroIndex%arr.length]:null;
+ const id=(['inicio','filmes','series'].includes(page)?i?.id:null)||null;
+ if(activeId!==id){stop();activeId=id;}
+ if(!id){logo.hidden=true;meta.textContent='';controls.hidden=true;return}
+ const saved=JSON.parse(localStorage.getItem('nox33-logo:'+i.id)||'null');
+ const url=safe(i.logo||saved||'');
+ logo.hidden=!url;if(url)logo.src=url;
+ title.style.display=url?'none':'';
+ const bits=[i.rating||i.ageRating||'',i.year||'',i.genre||'',i.type==='Série'?(i.seasonCount?i.seasonCount+' temporadas':'Série'):i.type==='Anime'?'Anime':'',i.full||i.quality||''];
+ meta.replaceChildren();
+ bits.filter(Boolean).forEach((v,n)=>{const el=document.createElement('span');el.textContent=v;if(n===0)el.className='nox33-rating';meta.append(el)});
+ controls.hidden=!(i.trailer||i.trailerUrl||i.youtubeTrailer);
+ if(id&&!player&&controls.hidden===false)start(i);
+};
+const form=document.getElementById('contentForm');
+if(form){
+ const banner=document.getElementById('fBanner');
+ if(banner){
+ const field=document.createElement('div');
+ field.innerHTML='<label>Logo oficial do título (PNG transparente recomendado)</label><input id="nox33Logo" type="url" placeholder="https://.../logo.png"><p class="hint">A logo substitui o título em texto somente no destaque. Sem logo, o nome aparece normalmente.</p>';
+ banner.insertAdjacentElement('afterend',field);
+ }
+ const oldEdit=window.editContent;
+ window.editContent=function(id){oldEdit.apply(this,arguments);const i=items.find(x=>x.id===id);document.getElementById('nox33Logo').value=i?.logo||localStorage.getItem('nox33-logo:'+id)?.replace(/^"|"$/g,'')||''};
+ // Capture the logo before the original form saves/resets.
+ form.addEventListener('submit',()=>{
+  const id=editId, value=document.getElementById('nox33Logo')?.value.trim()||'';
+  setTimeout(()=>{
+   const i=id?items.find(x=>x.id===id):items[0];
+   if(!i)return;
+   i.logo=value;
+   localStorage.setItem('nox33-logo:'+i.id,JSON.stringify(value));
+   try{localStorage.setItem(KEY,JSON.stringify(items))}catch{}
+   window.renderHero();
+  },0);
+ },true);
+}
+window.renderHero();
+})();
+</script>
+</body></html>
