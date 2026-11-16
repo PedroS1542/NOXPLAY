@@ -401,7 +401,7 @@ button.poster:hover{z-index:80!important}
  #catalog .noxHoverArt .nox22-sound,
  #catalog .noxHoverTrailer,
  #catalog .nox19-preview iframe { display:none!important; }
- </style><meta name="noxplay-version" content="V43 - prévia automática com tentativa de áudio e fallback silencioso"><style id="nox41-detail-polish">
+ </style><meta name="noxplay-version" content="V46 - banner estático nos detalhes e prévias apenas no carrossel"><style id="nox41-detail-polish">
 /* V41: logo do título também nos detalhes, sem duplicar o nome em texto. */
 #detailModal .nox38-detail-logo.nox41-detail-logo.ready{display:block!important;width:auto!important;max-width:min(500px,82vw)!important;max-height:clamp(90px,15vw,175px)!important;height:auto!important;object-fit:contain!important;object-position:left center!important;margin:12px 0 22px!important;filter:drop-shadow(0 5px 20px #000c)}
 #detailModal .nox4content .nox4eyebrow{margin-bottom:12px}
@@ -442,27 +442,13 @@ button.poster:hover{z-index:80!important}
 #detailModal .nox4actions>.nox42-watched{background:#252832;color:#fff;border:1px solid #ffffff50}
 #detailModal .nox4actions>.nox42-watched:hover{background:#373b46}
 #detailModal .nox4hero .nox4back{z-index:0}
-#detailModal .nox4hero .nox42-detail-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
- opacity:0;z-index:0;pointer-events:none;transition:opacity .65s ease}
-#detailModal .nox4hero .nox42-detail-video.nox42-playing{opacity:1}
 #detailModal .nox4hero:after{z-index:1;pointer-events:none}
 #detailModal .nox4hero .nox4content{z-index:2}
 @media(max-width:700px){
  #detailModal .nox4actions{gap:8px!important}
  #detailModal .nox4actions>button,#detailModal .nox4actions>.nox41-trailer-link{min-height:44px!important;padding:11px 12px!important;font-size:13px!important}
 }
-</style><style id="nox43-audio-first">
-/* A prévia tenta tocar com som. Caso o navegador bloqueie, o usuário pode ativá-lo aqui. */
-#detailModal .nox4hero .nox43-detail-sound{
- position:absolute;right:22px;bottom:20px;z-index:4;
- width:42px;height:42px;border:1px solid #ffffff8a;border-radius:50%;
- background:#08090bd9;color:#fff;cursor:pointer;display:grid;place-items:center;
- font-size:19px;line-height:1;box-shadow:0 3px 14px #0008
-}
-#detailModal .nox4hero .nox43-detail-sound:hover{background:#292c38}
-@media(max-width:700px){#detailModal .nox4hero .nox43-detail-sound{right:12px;bottom:12px;width:38px;height:38px}}
-</style>
-<style id="nox44-six-previews">
+</style><style id="nox44-six-previews">
 /* Só o botão de ativar/silenciar: sem cronômetro no banner. */
 #hero.nox36-hero .nox36-controls{left:auto!important;right:5%!important;width:auto!important;gap:0!important}
 #hero.nox36-hero .nox36-controls>span,#hero.nox36-hero .nox36-track{display:none!important}
@@ -1988,58 +1974,16 @@ const modal=document.getElementById('detailModal');
 if(modal){new MutationObserver(()=>{
  if(!modal.classList.contains('show')){window.nox42StopDetailPreview?.();if(typeof window.nox38ResumeCarousel==='function')window.nox38ResumeCarousel();}
 }).observe(modal,{attributes:true,attributeFilter:['class']})}
-let detailPreview=null,detailSoundButton=null;
+// V46: a prévia MP4 pertence apenas ao carrossel de destaques.
+// Na página do filme, preservar somente o banner estático e os botões.
+// Compatibilidade com chamadas antigas do botão Assistir e do fechamento do modal.
 window.nox42StopDetailPreview=function(){
- if(detailSoundButton){detailSoundButton.remove();detailSoundButton=null}
- if(!detailPreview)return;
- const v=detailPreview;detailPreview=null;
- try{v.pause();v.removeAttribute('src');v.load();v.remove()}catch{}
+ const hero=document.querySelector('#detailModal .nox4hero');
+ hero?.querySelectorAll('.nox42-detail-video,.nox43-detail-sound').forEach(el=>{
+  if(el.tagName==='VIDEO'){try{el.pause()}catch{}}
+  el.remove();
+ });
 };
-function startDetailPreview(item,root){
- if(!item.featured)return;
- const url=String(item.featuredPreview||item.previewUrl||item.heroPreview||'').trim() ||
-  (/\bcoraline\b/i.test(String(item.title||''))?'assets/trailers/coraline_previa_23s.mp4':'');
- if(!url||!/(?:\.mp4|\.webm|\.ogg)(?:[?#]|$)/i.test(url))return;
- const hero=root.querySelector('.nox4hero'),back=hero?.querySelector('.nox4back');if(!back)return;
- const v=document.createElement('video');v.className='nox42-detail-video';v.autoplay=true;
- v.muted=false;v.defaultMuted=false;v.playsInline=true;v.setAttribute('playsinline','');
- v.preload='auto';v.setAttribute('aria-hidden','true');v.tabIndex=-1;
- back.after(v);detailPreview=v;
- const audio=document.createElement('button');audio.type='button';audio.className='nox43-detail-sound';
- audio.setAttribute('aria-label','Silenciar prévia');audio.title='Silenciar prévia';audio.textContent='🔊';
- hero.append(audio);detailSoundButton=audio;
- const setMuted=isMuted=>{
-  v.muted=!!isMuted;v.defaultMuted=!!isMuted;
-  if(isMuted)v.setAttribute('muted','');else v.removeAttribute('muted');
-  audio.textContent=isMuted?'🔇':'🔊';audio.title=isMuted?'Ativar som da prévia':'Silenciar prévia';
-  audio.setAttribute('aria-label',audio.title);
- };
- audio.addEventListener('click',()=>{if(detailPreview!==v)return;setMuted(!v.muted);if(v.paused)v.play().catch(()=>{})});
- const candidates=[url];
- try{const u=new URL(url,location.href);if(u.origin===location.origin&&u.pathname.includes('/assets/trailers/')){
-  const fallback=new URL(u.pathname.split('/').pop(),location.href).href;
-  if(fallback!==u.href)candidates.push(fallback);
- }}catch{}
- let n=0;
- const attempt=()=>{
-  if(detailPreview!==v)return;
-  const index=n;setMuted(false);
-  const result=v.play();
-  if(result&&typeof result.catch==='function')result.catch(err=>{
-   if(detailPreview!==v||n!==index)return;
-   if(err?.name==='NotAllowedError'){
-    setMuted(true);
-    v.play().catch(()=>{if(detailPreview===v&&n===index)window.nox42StopDetailPreview()});
-   }else if(err?.name!=='AbortError'){
-    setTimeout(()=>{if(detailPreview===v&&n===index&&v.error)window.nox42StopDetailPreview()},500);
-   }
-  });
- };
- v.onplaying=()=>{if(detailPreview===v)v.classList.add('nox42-playing')};
- v.onended=()=>{v.classList.remove('nox42-playing');setTimeout(()=>{if(detailPreview===v)window.nox42StopDetailPreview()},700)};
- v.onerror=()=>{if(detailPreview!==v)return;if(++n<candidates.length){v.src=candidates[n];v.load();attempt()}else window.nox42StopDetailPreview()};
- v.src=candidates[0];attempt();
-}
 const previousDetail=window.showDetail;
 window.showDetail=function(id,play=false){
  window.nox42StopDetailPreview();
@@ -2047,7 +1991,7 @@ window.showDetail=function(id,play=false){
  if(typeof window.nox38HoldCarousel==='function')window.nox38HoldCarousel();
  const item=items.find(x=>x.id===id);if(!item)return;
  const root=document.getElementById('detailBody');
- if(!play)startDetailPreview(item,root);
+ // Sem reprodução duplicada: a imagem do banner permanece estática nos detalhes.
  const content=root?.querySelector('.nox4content, .cineInfo');
  const actions=content?.querySelector('.nox4actions, .cineActions');
  if(!content||!actions)return;
