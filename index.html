@@ -1219,7 +1219,7 @@ button.setAttribute('aria-expanded','false');
 header.insertBefore(button,header.firstChild);
 const menu=document.createElement('div');menu.className='n18-menu';menu.setAttribute('role','navigation');
 menu.setAttribute('aria-label','Navegação do NOXPLAY');
-const names=[['inicio','Início'],['filmes','Filmes'],['series','Séries'],['animes','Animes'],['categorias','Categorias'],['biblioteca','Minha biblioteca'],['novidades','Calendário de Lançamentos']];
+const names=[['inicio','Início'],['filmes','Filmes'],['series','Séries'],['animes','Animes'],['biblioteca','Minha biblioteca'],['novidades','Calendário de Lançamentos']];
 const label=document.createElement('div');label.className='n18-menu-title';label.textContent='EXPLORAR';menu.append(label);
 for(const [key,name] of names){
  const b=document.createElement('button');b.type='button';b.textContent=name;
@@ -1504,31 +1504,36 @@ function renderAdmin29(){if(!$29('n29AdminList'))return;$29('n29AdminList').inne
 render29();
 })();
 </script>
-<script id="nox30-home-navigation-fix">
+
+<style id="nox32-fix">body.nox32-home #filters{display:none!important}</style>
+<script id="nox32-home-navigation">
 (function(){
- 'use strict';
- function restoreHome(){
-  if(location.hash!=='#inicio' && location.hash!=='')return;
-  page='inicio';kind='Todos';genre='Todos';
-  const search=document.getElementById('search');if(search)search.value='';
-  const news=document.getElementById('n18NewsPage');if(news)news.hidden=true;
-  const hero=document.getElementById('hero');if(hero){hero.hidden=false;hero.style.display='';}
-  updatePage();
-  if(typeof renderExtra==='function')renderExtra();
-  if(typeof renderContinue==='function')renderContinue();
-  if(hero){hero.hidden=false;hero.style.display='';}
-  document.querySelectorAll('nav button').forEach((b,n)=>b.classList.toggle('active',n===0));
-  window.scrollTo({top:0,behavior:'instant'});
+ const oldUpdate=window.updatePage;
+ function sync(){
+   const home=page==='inicio';
+   document.body.classList.toggle('nox32-home',home);
+   const filters=document.getElementById('filters');
+   if(filters)filters.style.display=home?'none':(page==='categorias'?'flex':'none');
+   const heading=document.getElementById('pageHeading');
+   if(home && heading)heading.textContent='Explore o catálogo';
+   const hero=document.getElementById('hero');
+   if(hero)hero.style.display=home?'':'none';
  }
- const previousNavigate=navigate;
- navigate=function(next){
-  if(next!=='inicio')return previousNavigate(next);
-  page='inicio';kind='Todos';genre='Todos';
-  const search=document.getElementById('search');if(search)search.value='';
-  if(location.hash!=='#inicio')location.hash='inicio';
-  restoreHome();
+ window.updatePage=function(){oldUpdate.apply(this,arguments);sync()};
+ const oldNavigate=window.navigate;
+ window.navigate=function(next){
+   if(next==='inicio'){
+     page='inicio';kind='Todos';genre='Todos';
+     const search=document.getElementById('search');
+     if(search)search.value='';
+     location.hash='inicio';
+     window.updatePage();
+     window.scrollTo({top:0,behavior:'smooth'});
+     return;
+   }
+   return oldNavigate.apply(this,arguments);
  };
- window.addEventListener('hashchange',()=>{if(location.hash==='#inicio'||!location.hash)restoreHome()});
+ window.addEventListener('hashchange',()=>{if(location.hash==='#inicio'){page='inicio';window.updatePage()}});
+ sync();
 })();
-</script>
-</body></html>
+</script></body></html>
