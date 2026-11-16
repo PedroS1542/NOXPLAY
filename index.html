@@ -1504,4 +1504,31 @@ function renderAdmin29(){if(!$29('n29AdminList'))return;$29('n29AdminList').inne
 render29();
 })();
 </script>
+<script id="nox30-home-navigation-fix">
+(function(){
+ 'use strict';
+ function restoreHome(){
+  if(location.hash!=='#inicio' && location.hash!=='')return;
+  page='inicio';kind='Todos';genre='Todos';
+  const search=document.getElementById('search');if(search)search.value='';
+  const news=document.getElementById('n18NewsPage');if(news)news.hidden=true;
+  const hero=document.getElementById('hero');if(hero){hero.hidden=false;hero.style.display='';}
+  updatePage();
+  if(typeof renderExtra==='function')renderExtra();
+  if(typeof renderContinue==='function')renderContinue();
+  if(hero){hero.hidden=false;hero.style.display='';}
+  document.querySelectorAll('nav button').forEach((b,n)=>b.classList.toggle('active',n===0));
+  window.scrollTo({top:0,behavior:'instant'});
+ }
+ const previousNavigate=navigate;
+ navigate=function(next){
+  if(next!=='inicio')return previousNavigate(next);
+  page='inicio';kind='Todos';genre='Todos';
+  const search=document.getElementById('search');if(search)search.value='';
+  if(location.hash!=='#inicio')location.hash='inicio';
+  restoreHome();
+ };
+ window.addEventListener('hashchange',()=>{if(location.hash==='#inicio'||!location.hash)restoreHome()});
+})();
+</script>
 </body></html>
