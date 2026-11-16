@@ -1219,7 +1219,7 @@ button.setAttribute('aria-expanded','false');
 header.insertBefore(button,header.firstChild);
 const menu=document.createElement('div');menu.className='n18-menu';menu.setAttribute('role','navigation');
 menu.setAttribute('aria-label','Navegação do NOXPLAY');
-const names=[['inicio','Início'],['filmes','Filmes'],['series','Séries'],['animes','Animes'],['categorias','Categorias'],['biblioteca','Minha biblioteca'],['novidades','Novidades e Em Breve']];
+const names=[['inicio','Início'],['filmes','Filmes'],['series','Séries'],['animes','Animes'],['categorias','Categorias'],['biblioteca','Minha biblioteca'],['novidades','Calendário de Lançamentos']];
 const label=document.createElement('div');label.className='n18-menu-title';label.textContent='EXPLORAR';menu.append(label);
 for(const [key,name] of names){
  const b=document.createElement('button');b.type='button';b.textContent=name;
@@ -1457,4 +1457,51 @@ const detail=document.getElementById('detailModal');if(detail)observer.observe(d
  document.addEventListener('pointerover',e=>{const tile=e.target.closest?.('#catalog .noxTile');if(tile)place(tile)},true);
  window.addEventListener('resize',()=>document.querySelectorAll('#catalog .noxTile:hover').forEach(place));
 })();
-</script></body></html>
+</script>
+<style id="nox29-calendar-style">
+#n18NewsPage{min-height:65vh}#n18NewsPage h2{margin:30px 0 8px}.n29-tools{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:22px 0}.n29-tools input{width:auto;max-width:220px}.n29-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}.n29-day{background:#191b23;border:1px solid #333541;border-radius:10px;min-height:112px;padding:9px;min-width:0}.n29-day.out{opacity:.35}.n29-num{font-weight:750;color:#c7c8d0;font-size:13px}.n29-event{display:block;width:100%;background:#38202a;border:1px solid #7e3340;color:white;border-radius:7px;padding:6px;margin-top:7px;text-align:left;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.n29-event.released{border-color:#2e8d68;background:#17382d}.n29-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:15px;margin:20px 0}.n29-card{background:#191b23;border:1px solid #343640;border-radius:13px;overflow:hidden;cursor:pointer;text-align:left;color:white;padding:0}.n29-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}.n29-card-content{padding:13px}.n29-card-content p{color:#b6b8c3;font-size:13px}.n29-adm{border-top:1px solid #3b3c47;margin-top:25px;padding-top:18px}.n29-adm textarea{min-height:75px}.n29-adminlist>div{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #383944;padding:10px 0}.n29-adminlist button{width:auto;padding:8px}.n29-detail{width:min(660px,100%)}.n29-detail img{max-width:100%;max-height:250px;object-fit:cover;border-radius:10px}.n29-week{font-size:12px;color:#9fa1ae;text-align:center;padding:8px 0}@media(max-width:650px){.n29-calendar{gap:3px}.n29-day{padding:4px;min-height:75px}.n29-event{font-size:10px;padding:3px}.n29-num{font-size:11px}}
+</style>
+<script id="nox29-calendar">
+(function(){
+'use strict';
+const KEY29='noxplay-calendar-v29';const $29=id=>document.getElementById(id);
+const clean=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let records=[];try{records=JSON.parse(localStorage.getItem(KEY29)||'[]');if(!Array.isArray(records))records=[]}catch{}
+const today=new Date();let month=new Date(today.getFullYear(),today.getMonth(),1);let editing=null;
+const save=()=>{try{localStorage.setItem(KEY29,JSON.stringify(records))}catch{alert('Não foi possível salvar. Verifique o espaço do navegador.')}};
+const news=$29('n18NewsPage');if(!news)return;
+news.innerHTML='<h2>Calendário de Lançamentos</h2><p style="color:#aeb0bd">Veja os próximos títulos. Eles só entram no catálogo quando o administrador publicar o vídeo.</p><div class="n29-tools"><button type="button" class="secondary" id="n29Prev">‹ Anterior</button><strong id="n29Month"></strong><button type="button" class="secondary" id="n29Next">Próximo ›</button></div><div class="n29-calendar" id="n29Calendar"></div><h3>Lançamentos cadastrados</h3><div class="n29-cards" id="n29Cards"></div>';
+// As seções antigas não fazem mais parte da página de calendário.
+for(const id of ['noxV10New','noxV10Upcoming']){const el=$29(id);if(el)el.remove()}
+const detail=document.createElement('div');detail.className='modalBackdrop';detail.id='n29Detail';detail.innerHTML='<div class="modal n29-detail"><div class="modalHeader"><h2 id="n29DetailTitle"></h2><button type="button" class="close" id="n29Close">✕</button></div><div id="n29DetailBody"></div></div>';document.body.append(detail);
+$29('n29Close').onclick=()=>detail.classList.remove('show');detail.onclick=e=>{if(e.target===detail)detail.classList.remove('show')};
+function showRecord(id){const r=records.find(x=>x.id===id);if(!r)return;$29('n29DetailTitle').textContent=r.title;
+const trailer=r.trailer&&/^https?:\/\//i.test(r.trailer)?'<p><a target="_blank" rel="noopener noreferrer" href="'+clean(r.trailer)+'">Ver trailer</a></p>':'';
+$29('n29DetailBody').innerHTML=(r.banner||r.cover?'<img src="'+clean(r.banner||r.cover)+'" alt="Banner do lançamento">':'')+'<p><b>'+clean(r.date||'Data a confirmar')+'</b> · '+clean(r.type||'Filme')+' · '+(r.published?'<span style="color:#73d5a6">Disponível</span>':'Em breve')+'</p><p>'+clean(r.description)+'</p><p><b>Elenco:</b> '+clean(r.cast||'Não informado').replace(/\n/g,', ')+'</p>'+trailer+(r.published?'<button type="button" class="primary" id="n29Watch">Abrir no catálogo</button>':'<p class="hint">Este lançamento ainda não está disponível para assistir.</p>');
+if(r.published)$29('n29Watch').onclick=()=>{detail.classList.remove('show');if(typeof showDetail==='function')showDetail(r.catalogId||r.id)};
+detail.classList.add('show')}
+function render29(){const year=month.getFullYear(),mo=month.getMonth();$29('n29Month').textContent=month.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+const start=new Date(year,mo,1).getDay(),days=new Date(year,mo+1,0).getDate();let html=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map(d=>'<div class="n29-week">'+d+'</div>').join('');
+for(let i=0;i<Math.ceil((start+days)/7)*7;i++){const d=i-start+1,valid=d>0&&d<=days,key=year+'-'+String(mo+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');html+='<div class="n29-day '+(valid?'':'out')+'"><span class="n29-num">'+(valid?d:'')+'</span>'+(valid?records.filter(r=>r.date===key).map(r=>'<button type="button" class="n29-event '+(r.published?'released':'')+'" data-release="'+clean(r.id)+'">'+clean(r.title)+'</button>').join(''):'')+'</div>'}
+$29('n29Calendar').innerHTML=html;
+$29('n29Cards').innerHTML=records.length?records.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>'<button type="button" class="n29-card" data-release="'+clean(r.id)+'">'+(r.banner||r.cover?'<img loading="lazy" src="'+clean(r.banner||r.cover)+'" alt="">':'')+'<div class="n29-card-content"><b>'+clean(r.title)+'</b><p>'+clean(r.date||'Data a confirmar')+' · '+(r.published?'Disponível':'Em breve')+'</p></div></button>').join(''):'<p class="hint">Nenhum lançamento cadastrado ainda.</p>';
+news.querySelectorAll('[data-release]').forEach(b=>b.onclick=()=>showRecord(b.dataset.release));renderAdmin29()}
+$29('n29Prev').onclick=()=>{month=new Date(month.getFullYear(),month.getMonth()-1,1);render29()};$29('n29Next').onclick=()=>{month=new Date(month.getFullYear(),month.getMonth()+1,1);render29()};
+const admin=$29('adminModal')?.querySelector('.modal');if(!admin)return;
+const block=document.createElement('section');block.className='n29-adm';block.innerHTML=`<h3>📅 Gerenciar calendário de lançamentos</h3><p class="hint">Cadastre antecipadamente. O título não aparece no catálogo até você adicionar o link e clicar em Publicar. Os dados são salvos neste navegador, como os demais dados locais do site.</p><form id="n29Form"><div class="formgrid"><div><label>Título *</label><input id="n29Title" required></div><div><label>Data de lançamento *</label><input id="n29Date" type="date" required></div><div><label>Tipo</label><select id="n29Type"><option>Filme</option><option>Série</option><option>Anime</option></select></div><div><label>Gênero</label><input id="n29Genre" placeholder="Ação"></div></div><label>Sinopse</label><textarea id="n29Desc"></textarea><label>URL da capa vertical</label><input id="n29Cover" type="url" placeholder="https://..."><label>URL do banner horizontal</label><input id="n29Banner" type="url" placeholder="https://..."><label>URL do trailer</label><input id="n29Trailer" type="url" placeholder="https://youtube.com/..."><label>Elenco (uma pessoa por linha)</label><textarea id="n29Cast"></textarea><label>Link do filme (preencher quando estiver disponível)</label><input id="n29Video" type="url" placeholder="https://drive.google.com/..."><p class="hint">Salvar não publica o filme. Para liberar, adicione o link e clique em Publicar no catálogo.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="primary" type="submit">Salvar lançamento</button><button class="secondary" type="button" id="n29Publish">Publicar no catálogo</button><button class="secondary" type="button" id="n29Clear">Novo lançamento</button></div></form><h4>Lançamentos cadastrados</h4><div class="n29-adminlist" id="n29AdminList"></div>`;
+admin.append(block);
+const fields=['Title','Date','Type','Genre','Desc','Cover','Banner','Trailer','Cast','Video'];
+const reset=()=>{editing=null;$29('n29Form').reset()};$29('n29Clear').onclick=reset;
+function values(){const r={};for(const f of fields)r[f.toLowerCase()]=$29('n29'+f).value.trim();return r}
+function store(){const v=values();if(!v.title||!v.date){$29('n29Form').reportValidity();return null}let r=records.find(x=>x.id===editing);if(r)Object.assign(r,v);else{r={...v,id:crypto.randomUUID(),published:false};records.push(r);editing=r.id}save();render29();return r}
+$29('n29Form').onsubmit=e=>{e.preventDefault();if(store())alert('Lançamento salvo somente no calendário.')};
+$29('n29Publish').onclick=()=>{const r=store();if(!r)return;if(!r.video){alert('Adicione primeiro o link do vídeo para publicar.');return}if(!confirm('Publicar este título no catálogo agora?'))return;
+const old=items.find(i=>i.id===(r.catalogId||r.id));const data={...(old||{}),id:r.catalogId||r.id,title:r.title,type:r.type,year:r.date.slice(0,4),genre:r.genre||'Outros',description:r.desc,video:r.video,cover:r.cover,banner:r.banner,trailer:r.trailer,cast:r.cast,featured:false,status:'Disponível',addedAt:new Date().toISOString(),episodes:old?.episodes||[]};
+if(old)items=items.map(i=>i.id===old.id?data:i);else items.unshift(data);
+try{localStorage.setItem(KEY,JSON.stringify(items))}catch{alert('Não foi possível salvar no catálogo.');return}
+r.published=true;r.catalogId=data.id;save();render();render29();alert('Publicado no catálogo!')};
+function renderAdmin29(){if(!$29('n29AdminList'))return;$29('n29AdminList').innerHTML=records.map(r=>'<div><span>'+clean(r.title)+' <small>('+clean(r.date)+') '+(r.published?'✓ Publicado':'Em breve')+'</small></span><span><button type="button" data-edit="'+clean(r.id)+'">Editar</button> <button type="button" data-del="'+clean(r.id)+'">Excluir</button></span></div>').join('');$29('n29AdminList').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const r=records.find(x=>x.id===b.dataset.edit);if(!r)return;editing=r.id;for(const f of fields)$29('n29'+f).value=r[f.toLowerCase()]||'';$29('n29Form').scrollIntoView({behavior:'smooth',block:'start'})});$29('n29AdminList').querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{if(!confirm('Excluir este registro do calendário? O filme já publicado permanecerá no catálogo.'))return;records=records.filter(x=>x.id!==b.dataset.del);save();reset();render29()})}
+render29();
+})();
+</script>
+</body></html>
