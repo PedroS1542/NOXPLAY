@@ -606,7 +606,7 @@ playCurrent=function(){
     const sec=document.getElementById('continueSection'),grid=document.getElementById('continueGrid');if(!sec||!grid)return;
     const list=items.filter(i=>progress[i.id]?.time>0&&library[i.id]!=='assistidos').sort((a,b)=>(progress[b.id]?.updated||0)-(progress[a.id]?.updated||0));
     sec.style.display=page==='inicio'&&list.length?'':'none';
-    grid.innerHTML=list.map(i=>`<button class="poster" oncontextmenu="openPosterMenu(event,'${esc(i.id)}')" onclick="showDetail('${esc(i.id)}',true)"><div class="posterImg">${cover(i)?`<img src="${esc(cover(i))}" alt="Capa de ${esc(i.title)}" loading="lazy">`:''}</div><div class="posterTitle">${esc(i.title)}</div><div class="posterMeta">Continuar assistindo</div></button>`).join('');
+    grid.innerHTML=list.map(i=>`<button class="poster" oncontextmenu="openPosterMenu(event,'${esc(i.id)}')" onclick="showDetail('${esc(i.id)}',true)"><div class="posterImg">${cover(i)?`<img src="${esc(cover(i))}" alt="Capa de ${esc(i.title)}" loading="lazy">`:''}</div><div class="posterTitle">${esc(i.title)}</div></button>`).join('');
     enhanceGrid('continueGrid');
   };
   // The cinematic detail page from V11 is retained, including cast and trailer.
