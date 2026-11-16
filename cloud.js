@@ -24,6 +24,19 @@ window.saveContent=async e=>{e.preventDefault();if(!(await checkAdmin())){toast(
  const {error}=await db.from('titles').upsert({id,data});if(error)throw error;resetForm();await reload();toast('Publicado para todos os visitantes!');}catch(err){console.error(err);toast('Erro: '+err.message);}finally{if(button)button.disabled=false;}};
 window.deleteContent=async id=>{if(!(await checkAdmin()))return;if(!confirm('Excluir este título do catálogo público?'))return;const {error}=await db.from('titles').delete().eq('id',id);if(error)toast('Erro: '+error.message);else{await reload();toast('Título excluído');}};
 window.editContent=id=>{originalEdit(id);v11Write(items.find(i=>i.id===id));};
+
+window.nox25RestoreCatalog=async function(records){
+ if(!(await checkAdmin()))throw new Error('Entre com uma conta ADM autorizada.');
+ if(!Array.isArray(records)||!records.length||records.length>3000)throw new Error('Backup vazio ou grande demais.');
+ let done=0;
+ for(let p=0;p<records.length;p+=25){
+  const rows=records.slice(p,p+25).map(x=>({id:x.id,data:Object.fromEntries(Object.entries(x).filter(([k])=>k!=='id'))}));
+  const {error}=await db.from('titles').upsert(rows,{onConflict:'id'});
+  if(error)throw new Error('Importados '+done+' de '+records.length+'. '+error.message);
+  done+=rows.length;
+ }
+ await reload();return done;
+};
 // Nunca permitir que o armazenamento local antigo substitua o catálogo público.
 reload();
 })();
