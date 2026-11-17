@@ -1960,8 +1960,27 @@ window.renderHero();
 const f=document.getElementById('fTrailer');
 if(f){
  const previewField=document.createElement('div');previewField.className='nox41-preview-admin';
- previewField.innerHTML='<label for="nox41FeaturedPreview"><strong>Prévia cinematográfica do destaque (MP4)</strong></label><input id="nox41FeaturedPreview" type="text" placeholder="assets/trailers/nome_previa.mp4 ou URL do Supabase Storage"><small>Opcional. Selecione até 6 títulos como destaque em cada seção. Envie cada prévia MP4 ao GitHub ou Storage e cole o caminho aqui. O botão Trailer continua usando o YouTube. Para Coraline, a prévia de 23 segundos já está configurada automaticamente.</small>';
+ previewField.innerHTML='<label for="nox41FeaturedPreview"><strong>Prévia cinematográfica do destaque (MP4)</strong></label><input id="nox41FeaturedPreview" type="text" placeholder="assets/trailers/nome_previa.mp4 ou URL do Supabase Storage"><small>Opcional. Selecione até 6 títulos como destaque em cada seção. Envie cada prévia MP4 ao GitHub ou Storage e cole o caminho aqui. O botão Trailer continua usando o YouTube. A prévia é opcional e independente do trailer do YouTube.</small>';
  f.insertAdjacentElement('afterend',previewField);
+ const uploadPanel=document.createElement('div');
+ uploadPanel.className='nox48-upload';
+ uploadPanel.innerHTML='<label for="nox48PreviewFile"><strong>Enviar prévia do notebook</strong></label><input id="nox48PreviewFile" type="file" accept="video/mp4,.mp4"><button id="nox48UploadButton" class="secondary" type="button">Enviar MP4 para o Supabase</button><p id="nox48UploadStatus" class="hint" aria-live="polite">Máximo de 50 MB por arquivo. O envio cria uma cópia online; depois clique em Salvar no catálogo.</p>';
+ previewField.appendChild(uploadPanel);
+ const uploadButton=uploadPanel.querySelector('#nox48UploadButton');
+ uploadButton.addEventListener('click',async()=>{
+  const file=uploadPanel.querySelector('#nox48PreviewFile').files[0],status=uploadPanel.querySelector('#nox48UploadStatus');
+  if(!file){status.textContent='Selecione um arquivo MP4 primeiro.';return}
+  if(!/^video\/mp4$/i.test(file.type)&&!/\.mp4$/i.test(file.name)){status.textContent='Selecione um MP4 válido.';return}
+  if(file.size>50*1024*1024){status.textContent='O arquivo ultrapassa 50 MB. Comprima a prévia antes de enviar.';return}
+  if(!window.nox48UploadPreview){status.textContent='A conexão do Supabase ainda não está pronta. Confira cloud.js e config.js.';return}
+  uploadButton.disabled=true;status.textContent='Enviando prévia… aguarde.';
+  try{
+   const url=await window.nox48UploadPreview(file);
+   document.getElementById('nox41FeaturedPreview').value=url;
+   status.textContent='Upload concluído! Agora marque Exibir no banner de destaque e clique em Salvar no catálogo.';
+  }catch(err){status.textContent='Erro no upload: '+(err?.message||String(err))}
+  finally{uploadButton.disabled=false}
+ });
  const block=document.createElement('div');block.className='nox38-admin-clips';
  block.innerHTML='<strong>Tempo da prévia no carrossel</strong><div class="nox38-grid"><label>Começar o vídeo em (segundos)<input id="nox38ClipStart" type="number" min="0" max="3600" value="0" step="1"></label><label>Duração da prévia (segundos)<input id="nox38ClipDuration" type="number" min="5" max="45" value="18" step="1"></label></div><p>O banner aparece por cerca de 1,65 segundo. Arquivos MP4 de prévia são reproduzidos inteiros (a Coraline dura 23 segundos). Se não houver prévia, o carrossel avança. O limite é de seis destaques e o último não reinicia automaticamente.</p>';
  previewField.insertAdjacentElement('afterend',block);
@@ -1970,7 +1989,7 @@ if(f){
  const oldEdit=window.editContent;
  window.editContent=function(id){oldEdit.apply(this,arguments);const i=items.find(x=>x.id===id);get('nox41FeaturedPreview').value=i?.featuredPreview||i?.previewUrl||'';get('nox38ClipStart').value=i?.trailerStart??0;get('nox38ClipDuration').value=i?.trailerPreviewDuration??18};
  const oldReset=window.resetForm;
- window.resetForm=function(){oldReset.apply(this,arguments);get('nox41FeaturedPreview').value='';get('nox38ClipStart').value=0;get('nox38ClipDuration').value=18};
+ window.resetForm=function(){oldReset.apply(this,arguments);get('nox41FeaturedPreview').value='';document.getElementById('nox48PreviewFile').value='';get('nox38ClipStart').value=0;get('nox38ClipDuration').value=18};
  const oldSave=window.saveContent;
  window.saveContent=function(e){
   const id=editId,name=get('fTitle').value.trim(),clip=window.nox38GetClipConfig();
