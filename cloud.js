@@ -33,6 +33,7 @@ window.saveContent=async e=>{e.preventDefault();if(!(await checkAdmin())){toast(
  Object.assign(data,v11Read());
  Object.assign(data,typeof window.nox38GetClipConfig==='function'?window.nox38GetClipConfig():{});
  data.logo=typeof window.nox36GetLogo==='function'?window.nox36GetLogo():(items.find(x=>x.id===id)?.logo||'');
+ data.filmVersions=typeof window.nox49GetVersions==='function'?window.nox49GetVersions():(items.find(x=>x.id===id)?.filmVersions||[]);
  const {error}=await db.from('titles').upsert({id,data});if(error)throw error;resetForm();await reload();toast('Publicado para todos os visitantes!');}catch(err){console.error(err);toast('Erro: '+err.message);}finally{if(button)button.disabled=false;}};
 window.deleteContent=async id=>{if(!(await checkAdmin()))return;if(!confirm('Excluir este título do catálogo público?'))return;const {error}=await db.from('titles').delete().eq('id',id);if(error)toast('Erro: '+error.message);else{await reload();toast('Título excluído');}};
 window.editContent=id=>{originalEdit(id);v11Write(items.find(i=>i.id===id));};

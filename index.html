@@ -2100,4 +2100,53 @@ window.showDetail=function(id,play=false){
 };
 })();
 </script>
+<style id="nox49-style">
+.nox49-admin{margin:18px 0;padding:18px;border:1px solid #ffffff29;border-radius:14px;background:#171820}
+.nox49-admin h4{margin:0 0 8px}.nox49-admin .hint{color:#aeb0bd;font-size:13px}
+.nox49-entry{border:1px solid #ffffff25;border-radius:12px;padding:13px;margin:12px 0;background:#20212a}
+.nox49-entry .nox49-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.nox49-entry label{display:block;font-size:13px;color:#ddd}.nox49-entry input,.nox49-entry textarea{width:100%;margin-top:5px;box-sizing:border-box}
+.nox49-entry textarea{min-height:60px}.nox49-entry button{margin-top:9px}
+.nox49-tabs{display:flex;gap:22px;border-bottom:1px solid #ffffff30;margin:24px 0 18px;overflow:auto}
+.nox49-tab{border:0;background:transparent;color:#aaa;font-weight:750;padding:13px 3px;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent}
+.nox49-tab.active{color:white;border-bottom-color:#e73950}
+.nox49-versions{display:grid;gap:13px}
+.nox49-version{display:flex;align-items:center;text-align:left;gap:18px;padding:13px;border:1px solid #ffffff2b;border-radius:13px;background:#1b1c23;color:white;cursor:pointer;width:100%;transition:background .15s,border-color .15s}
+.nox49-version:hover,.nox49-version:focus-visible{border-color:#e73950;background:#29202a}
+.nox49-thumb{width:180px;max-width:35%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#34333e;flex-shrink:0}
+.nox49-placeholder{display:grid;place-items:center;font-size:24px}
+.nox49-info{flex:1;min-width:0}.nox49-info strong{display:block;font-size:17px;margin-bottom:6px}.nox49-info p{color:#bfc0ca;margin:0;font-size:13px;line-height:1.5}.nox49-time{font-size:12px;color:#bbb;align-self:center;white-space:nowrap}
+@media(max-width:600px){.nox49-entry .nox49-fields{grid-template-columns:1fr}.nox49-version{gap:10px;padding:9px}.nox49-thumb{width:115px}.nox49-info strong{font-size:14px}.nox49-time{font-size:11px}}
+</style>
+<script id="nox49-film-versions">
+(function(){'use strict';
+const get=id=>document.getElementById(id);
+const validUrl=s=>{try{const u=new URL(s);return ['https:','http:'].includes(u.protocol)}catch{return false}};
+const fields=[['name','Nome da versão *','text','Ex.: Versão estendida, IMAX, Versão do diretor'],['description','Descrição','textarea','O que muda nesta edição?'],['duration','Duração','text','Ex.: 2h39min'],['image','URL da miniatura','url','https://.../imagem.jpg'],['url','Link do vídeo no Google Drive *','url','https://drive.google.com/file/d/.../view']];
+let draft=[];
+function makeField(row,key,label,type,placeholder){const wrap=document.createElement('label');wrap.textContent=label;const input=document.createElement(type==='textarea'?'textarea':'input');if(type!=='textarea')input.type=type;input.placeholder=placeholder;input.value=row[key]||'';input.addEventListener('input',()=>{row[key]=input.value});wrap.append(input);return wrap;}
+function draw(){const list=get('nox49AdminList');if(!list)return;list.replaceChildren();draft.forEach((v,index)=>{const box=document.createElement('div');box.className='nox49-entry';const head=document.createElement('strong');head.textContent='Versão '+(index+1);box.append(head);const grid=document.createElement('div');grid.className='nox49-fields';fields.forEach(([key,label,type,placeholder])=>grid.append(makeField(v,key,label,type,placeholder)));box.append(grid);const del=document.createElement('button');del.type='button';del.className='secondary';del.textContent='Remover versão';del.onclick=()=>{draft.splice(index,1);draw()};box.append(del);list.append(box)})}
+const form=get('contentForm');if(form){const panel=document.createElement('section');panel.className='nox49-admin';panel.innerHTML='<h4>🎞️ Versões alternativas do filme</h4><p class="hint">Opcional. Adicione versão estendida, IMAX, versão do diretor ou qualquer nome. Cada versão abre seu próprio player do Google Drive. O botão Assistir principal continua usando o link padrão. Deixe vazio para não mostrar a aba Versões.</p><div id="nox49AdminList"></div><button type="button" class="secondary" id="nox49AddVersion">＋ Adicionar versão</button>';const featured=form.querySelector('#fFeatured')?.closest('label');if(featured)featured.before(panel);else form.append(panel);get('nox49AddVersion').onclick=()=>{draft.push({name:'',description:'',duration:'',image:'',url:''});draw()};}
+window.nox49GetVersions=function(){return draft.map(v=>Object.fromEntries(fields.map(([k])=>[k,String(v[k]||'').trim()]))).filter(v=>v.name||v.url)};
+window.nox49LoadVersions=function(i){draft=Array.isArray(i?.filmVersions)?i.filmVersions.map(v=>({name:String(v.name||''),description:String(v.description||''),duration:String(v.duration||''),image:String(v.image||''),url:String(v.url||'')})):[];draw()};
+const oldEdit=window.editContent;window.editContent=function(id){oldEdit.apply(this,arguments);window.nox49LoadVersions(items.find(x=>String(x.id)===String(id)))};
+const oldReset=window.resetForm;window.resetForm=function(){oldReset.apply(this,arguments);window.nox49LoadVersions(null)};
+// Validate before saving. cloud.js reads versions and saves them alongside the rest of the record.
+form?.addEventListener('submit',function(e){const versions=window.nox49GetVersions();const invalid=versions.find(v=>!v.name||!v.url||!validUrl(v.url)||(v.image&&!validUrl(v.image)));if(invalid){e.preventDefault();e.stopImmediatePropagation();alert('Confira as versões: cada uma precisa de nome e link válido. A miniatura, se preenchida, precisa de URL válida.');}},true);
+const oldDetail=window.showDetail;
+window.nox49OpenVersion=function(index){const v=current?.filmVersions?.[index];if(!v?.url)return;window.nox42StopDetailPreview?.();if(typeof window.noxDriveEmbed==='function')window.noxDriveEmbed(v.url,String(current.id)+'-version-'+index);else if(typeof window.v11Video==='function')window.v11Video(v.url,'','',String(current.id)+'-version-'+index);get('playerArea')?.scrollIntoView({behavior:'smooth',block:'start'})};
+window.showDetail=function(id,play){oldDetail.apply(this,arguments);const item=items.find(x=>String(x.id)===String(id));const versions=Array.isArray(item?.filmVersions)?item.filmVersions.filter(v=>v&&v.name&&v.url):[];if(!versions.length)return;
+ const below=document.querySelector('#detailModal .nox4below');if(!below)return;
+ const section=document.createElement('section');section.className='nox4section nox49-section';
+ const tabs=document.createElement('div');tabs.className='nox49-tabs';
+ const panel=document.createElement('div');panel.className='nox49-versions';
+ const makeTab=(label,selected,handler)=>{const b=document.createElement('button');b.type='button';b.className='nox49-tab'+(selected?' active':'');b.textContent=label;b.onclick=()=>{tabs.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');handler()};tabs.append(b)};
+ const content=document.createElement('div');const info=document.createElement('p');info.style.color='#bfc0ca';info.textContent='Selecione uma edição para abrir o player correspondente.';
+ const renderVersions=()=>{content.replaceChildren(info,panel);panel.replaceChildren();versions.forEach((v,index)=>{const b=document.createElement('button');b.type='button';b.className='nox49-version';const img=v.image&&validUrl(v.image)?document.createElement('img'):document.createElement('div');img.className='nox49-thumb'+(img.tagName==='DIV'?' nox49-placeholder':'');if(img.tagName==='IMG'){img.src=v.image;img.alt='Miniatura da versão '+v.name;img.loading='lazy'}else img.textContent='▶';b.append(img);const meta=document.createElement('div');meta.className='nox49-info';const name=document.createElement('strong');name.textContent=v.name;meta.append(name);if(v.description){const desc=document.createElement('p');desc.textContent=v.description;meta.append(desc)}b.append(meta);if(v.duration){const time=document.createElement('span');time.className='nox49-time';time.textContent=v.duration;b.append(time)}b.onclick=()=>window.nox49OpenVersion(index);panel.append(b)})};
+ const details=document.createElement('div');details.style.color='#bfc0ca';details.textContent='Informações do filme, elenco e trailer continuam disponíveis abaixo.';
+ makeTab('VERSÕES',true,renderVersions);makeTab('DETALHES',false,()=>content.replaceChildren(details));
+ section.append(tabs,content);renderVersions();const cast=below.querySelector('#nox4cast');if(cast)cast.before(section);else below.prepend(section);
+};
+})();
+</script>
 </body></html>
